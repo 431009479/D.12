@@ -2,8 +2,11 @@
 	> File Name: 1.c
 	> Author: 
 	> Mail: 
-	> Created Time: 2020年04月30日 星期四 17时26分07秒
+	> Created Time: 2020年04月30日 星期四 17时40分23秒
  ************************************************************************/
 
-#include<stdio.h
+#include<stdio.h>
+int main(){
 
+    return 0;
+}
