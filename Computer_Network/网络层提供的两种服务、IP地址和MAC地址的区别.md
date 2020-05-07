@@ -11,17 +11,19 @@
 > IP地址分为IPV4和IPV6。IPV4由32位整数组成，分成4个部分，每块8位二进制。IPV6由128位整数组成，分成8个部分，每个部分16位二进制，即4位6进制。一个完整的IP地址由两个部分组成：网络地址+主机地址。
 > 网络地址用于路由选择；主机地址用于在网络或子网内部寻找一个单独的主机。
 
+![image.png](http://ww1.sinaimg.cn/large/00882iMugy1gejpvpms6vj31fo0q67wh.jpg)
+
 ![image.png](http://ww1.sinaimg.cn/large/00882iMugy1gej2pbh6q8j30qd0670vn.jpg)
 
 ![image.png](http://ww1.sinaimg.cn/large/00882iMugy1gej2tldqgjj30sv0ezgq8.jpg)
 
-![image-20200506220851613](/home/xiongdongdong/.config/Typora/typora-user-images/image-20200506220851613.png)
+![image.png](http://ww1.sinaimg.cn/large/00882iMugy1gejpwlir4vj30nh0c5dkv.jpg)
 
 IP地址是每台计算机在网络中的唯一标识。采用“点分十进制”的方式来记忆IP地址。 举：192.168.32.80
 
-![image-20200506222106462](/home/xiongdongdong/.config/Typora/typora-user-images/image-20200506222106462.png)
+![image.png](http://ww1.sinaimg.cn/large/00882iMugy1gejpx2tudfj30n90bm43m.jpg)
 
-![image-20200506222239548](/home/xiongdongdong/.config/Typora/typora-user-images/image-20200506222239548.png)
+![image.png](http://ww1.sinaimg.cn/large/00882iMugy1gejpxi8p3kj30nb0c2tfl.jpg)
 
 IP地址和MAC地址的关系：首先，IP 间的通信依赖 MAC 地址。使用 ARP 协议凭借 MAC 地址进行通信：
 
