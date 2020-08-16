@@ -1,0 +1,944 @@
+[TOC]
+
+
+
+# 泛型编程  C++：模板
+
+泛型编程将 任意类型 从程序设计中抽象出来
+
+> 面向过程编程用模板实现函数过程
+>
+> 面向对象编程用模板实现类
+
+> 模板是泛型编程的基础，泛型编程即以一种独立于任何特定类型的方式编写代码。  
+
+> 模板是创建泛型类或函数的蓝图或公式。库容器，比如迭代器和算法，都是泛型编程的例子，它们都使用了模板的概念。
+
+> 模板可以让我们生成通用参数类型的函数，这个通用的函数能够接受任意类型参数，同样可以返回任意类型的值，这样就避免了对所有类型的函数进行重载。 
+
+
+
+## 函数模板
+
+```c++
+template <class T> 
+template <typename T> 
+ 这就是一个函数模板的定义，首先我们要有关键字template,后面紧跟一个尖括号，里面关键字可以使用class或typename，后面的T是由我们自己定义的名称。
+    
+template<typename T>
+T add(T a, T b) {
+return a + b;
+}
+//当调用这样的模板函数时类型T就会被被调用时的类型所代替，比如add(a,b)其中a和b是int 型，这时模板函数add中的形参T就会被int 所代替，模板函数就变为add(int &a, int &b)。而当add(c,d)其中c和d是double类型时，模板函数会被替换为add(double &a, double &b)
+```
+
+## 类模板
+
+```c++
+template<typename T> 
+class 类名{ ... };
+一但声明了类模板就可以用类模板的形参名声明类中的成员变量和成员函数，即可以在类中使用内置类型的地方都可以使用模板形参名来声明
+template<typename T> 
+class A{
+public: 
+　　T a,  b; 
+　　T hy(T c, T &d);
+};
+在类A中声明了两个类型为T的成员变量a和b，还声明了一个返回类型为T带两个参数类型为T的函数hy。
+  定义： A<int> m  //int 代替 T
+//另一种的类模板
+class PrintAny { //一个拥有模板方法的类， 在类内部使用模板方法。
+public:
+    template<typename T>
+        void operator()(const T &a) {
+            cout << a << endl;
+        }
+};
+```
+
+
+
+```c++
+template<typename T, typename U> 
+auto add(T a, U b) -> decltype(a + b) { //auto 自动   decltype() 用来推导表达式返回值的类型，返回值后置
+    	return a + b;
+}
+//该方法可用于类中。
+```
+
+## 模板特化 偏特化
+
+### 特化
+
+> 模板为什么要特化，因为编译器认为，对于特定的类型，对某一功能有更好地实现。
+>
+> 特化就是限定死模板实现的具体类型。
+
+```c++
+//特化模板函数模板
+template<typename T, typename U> 
+auto add(T a, U b) -> decltype(a + b) { //decltype() 用来推导表达式返回值的类型，返回值后置
+    return a + b;
+}
+template<>
+int add(int a, int b) {
+    cout << "add int : " << a << " " << b << endl;
+    return a + b;
+}
+//特化模板类
+template<typename T>
+class FoolPrintAny {
+public: 
+    void operator()(const T &a) {
+        cout << a << endl;
+    }
+};
+
+template<>
+class FoolPrintAny<int> {
+public:
+    void operator()(const int &a) {
+        cout << "naughty : " << 2 * a << endl;
+    }
+};
+```
+
+### 偏特化
+
+- **偏特化**：对于模板的类型做一些限制
+- 偏特化份为两种 一种是部分特化，一种是对于模板类型的进一步限制
+- 部分特化：就是只对函数模板的一部分模板类型进行特化
+
+```c++
+//偏特化模板函数模板
+template<typename T, typename U> //模板的片特化
+auto add(T *a, U *b) -> decltype(*a + *b) {
+    return add(*a, *b); //二维地址也行，递归调用两次add(*a, *b)
+}
+//偏特化模板类模板
+template<typename T1,typename T2> //这是范围上的偏特化
+class Test<T1*,T2*>{
+public:
+    Test(T1* i,T2* j):a(i),b(j){cout<<"指针偏特化"<<endl;}
+private:
+    T1* a;
+    T2* b;
+};
+//对类型的范围的限制，主要的类型基础不变
+```
+
+## 变参模板
+
+>（1）参数个数：利用参数个数逐一递减的特性，实现递归调用；
+>
+>（2）参数类型：参数个数逐一递减导致参数类型也逐一递减；
+>
+>两个注意点:
+>
+>（1）递归调用
+>
+>（2）递归终止：使用重载的办法终止递归调用
+
+
+
+```c++
+可变参数模板和普通模板的语义是一样的，只是写法上稍有区别，声明可变参数模板时需要在typename或class后面带上省略号“...”。比如我们常常这样声明一个可变模版参数：
+template<typename...>
+template<class...>
+一个典型的可变模版参数的定义是这样的：
+
+template <typename...  Args>
+void f(Args... args);
+//省略号的作用有两个：
+1.声明一个参数包Args... args，这个参数包中可以包含0到任意个模板参数；
+2.在模板定义的右边，可以将参数包展开成一个一个独立的参数。
+    //可变模版参数和普通的模版参数语义是一致的，所以可以应用于函数和类，即可变模版参数函数和可变模版参数类，然而，模版函数不支持偏特化，所以可变模版参数函数和可变模版参数类展开可变模版参数的方法还不尽相同，
+```
+
+
+
+```c++
+//递归终止函数
+void print(){
+   cout << "empty" << endl;
+}
+//展开函数
+template <class T, class ...Args>
+void print(T head, Args... rest){
+   cout << "parameter " << head << endl;
+   print(rest...);
+}
+int main(void){
+   print(1,2,3,4);
+   return 0;
+}
+上例会输出每一个参数，直到为空时输出empty。展开参数包的函数有两个，一个是递归函数，另外一个是递归终止函数，参数包Args...在展开的过程中递归调用自己，每调用一次参数包中的参数就会少一个，直到所有的参数都展开为止，当没有参数时，则调用非模板函数print终止递归过程。
+```
+
+
+
+> ```C++
+> template<int n, typename T, typename ...ARGS>
+> struct ARG {
+>     typedef typename ARG<n - 1, ARGS...>::getT getT; //递归
+>     typedef ARG<n - 1, ARGS...> N;
+> };
+> 
+> template<typename T, typename ...ARGS>
+> struct ARG<0, T, ARGS...> { //(0, int, double);
+>     typedef T getT;
+> };
+> 
+> template<typename T>
+> struct ARG<0, T> { //(0,  int)调用
+>     typedef T getT; //重命名
+>     typedef T finalT; //判断边界
+> };
+> 
+> template<typename T, typename ...ARGS> class Test;
+> template<typename T, typename ...ARGS>
+> class Test<T(ARGS...)> {
+> public :
+>     T operator()(typename ARG<0, ARGS...>::getT a, typename ARG<1, ARGS...>::N::finalT b) {
+>         return a + b;
+>     }
+> };
+> ```
+
+## 模板类型推导
+
+对于模板函数来说，编译器需要根据实际传入的参数来推导模板类型T。例如，假设我们有下面这个模板函数：
+
+```c++
+tempalte<typename T>
+void f(T& param); // param si a reference
+```
+
+同时声明了这些变量：
+
+```c++
+int x = 27;				// x is an int
+const int cx = x;		// cx is a const int
+const int& rx = x;		// rx is a reference to x as a const int
+```
+
+那么调用模板函数时，编译器推导出的模板类型分别为：
+
+```c++
+f(x)		// T is int, param's type is int&
+f(cx)		// T is const int, param's type is const int&
+f(rx)		// T is const int, param's type is const int&
+```
+
+带不带const、是不是reference，类型推导的结果是不一样的。回到刚开始声明的模板函数，我们声明了参数类型为T&，如果声明为T，或者是T&&，又会得到怎样的结果？我们用表格来总结一下：
+
+```c++
+想要按值传递，将模板函数参数声明为T param；
+想要按引用传递，但不考虑右值时，将模板函数参数声明为const T& param；
+想要按引用传递，但要区分左值和右值时，将模板函数声明为T&& param；
+```
+
+```c++
+隐是实例化
+template<typename T>
+T add(T a, T b){
+    cout << "add function : " << sizeof(T) << endl;
+    return a + b;
+}
+
+int main(){
+    cout << add(2, 3) << endl;
+    cout << add(2.3, 4.5) << endl;
+    return 0;
+}
+```
+
+
+
+```c++
+显示
+template<typename T>
+T add(T a, T b){
+    cout << "add function : " << sizeof(T) << endl;
+    return a + b;
+}
+int main(){
+    cout << add<double>(2.3, 5)<< endl;
+    return 0;
+}
+```
+
+
+
+> 模板函数作为参数，传递给函数的间接类型推导
+
+```c++
+template<typename T, typename U>
+T test_param_func(U a) {
+    return a * 2;
+}
+void func2(int (*func)(double)) {  //int 对应 T返回值类型   ； double 对应 U  参数类型
+    cout << func(2.3) << endl;
+}
+```
+
+### 引用折叠
+
+> 引用折叠：创建引用的引用时（如模板参数、类型别名）会造成引用折叠，折叠规则如下：
+>
+> ```c++
+> 也就是说，对于一个给定类型 x :
+> x& &、x& && 、x&& &都折叠成类型x&
+> 类型x&& && 折叠成x&&
+>  //引用折叠只能应用于间接创建的引用的引用，如类型别名或模板参数
+>     如果一个函数参数是一个指向模板类型参数的右值引用，则它可以被绑定到一个左值。
+> 如果实参是一个左值，则推断出的模板实参将是一个左值引用，且函数参数将被实例化为一个左值引用参数。
+>     我们可以将任意类型的实参传递给T&&类型的函数参数。对于这种类型的参数，显示我们也可以传递给它右值，当然也可以传递左值。
+> ```
+
+> 右值转换的含义是：
+> 形容`funRef(T && arg)`的这种参数为右值引用的模板，当实参为一个左值时，调用仍然成功，此时编译器推断模板参数（也就是T）为左值的引用。例如调用`funRef(i)`,那么`T是int&`而非`int`，展开可知`funRef(int & && arg)`再采用上述的引用折叠规则，可知最后`arg`是`int&`
+>
+> ```
+> funRef(i);//实参是左值，int,T是int&
+> funRef(ci);//实参是左值,const int,T是const int &12
+> ```
+>
+> 以上这两条规则意味着，我们可以将任意类型的实参传递给`T&&`类型的函数参数。
+
+```c++
+显式模板实参
+在某些情况下，编译器无法推断出模板实参的类型。比如下面的例子：
+template <typename T1, typename T2, typename T3>
+T1 sum(T2, T3);
+
+上面的例子中，没有任何函数实参的类型可用来推断T1的类型。每次调用sum时，都必须为T1提供一个显式模板实参。sum的调用方法可以是：
+auto val = sum<long long>(i, lng);
+此调用显示指定T1的类型，T2和T3的类型则由编译器从i和lng的类型推断出来。
+```
+
+
+
+```c++
+//remove——reference
+template<typename T> struct remove_reference { typedef T type; }; //正常值版本
+template<typename T> struct remove_reference<T &> {  typedef T type; }; //左值引用偏特化版本
+template<typename T> struct remove_reference<T &&> {  typedef T type; };//右值引用偏特化版本
+
+//模板中的引用折叠
+template<typename T>
+typename remove_reference<T>::type add2(T &&a, T&&b) {
+    typename remove_reference<T>::type c = a + b; //不使用remove会造成把右值赋值给左值引用
+    return c;
+}
+如果 a是左值  T -->  T&
+    如果 a是右值  T -->  T&&
+```
+
+
+
+```c++
+//remove_pointer
+template<typename T> struct remove_pointer { typedef T type; }; //递归终止
+template<typename T> struct remove_pointer<T *> { typedef typename remove_pointer<T>::type type; }; //递归
+//去指针*
+```
+
+```c++
+template<typename T>
+void my_swap(T &&a, T &&b) {
+    typename remove_reference<T>::type c;
+    c = a;
+    a = b;
+    b = c;
+    return ;
+}
+
+//move
+template<typename T>
+typename remove_reference<T>::type my_move(T &&a) { //&& 接收引用，左值变量会被推导为左值引用类型，右值会被推导为普通类型
+    return typename remove_reference<T>::type(a); //C++ 中的强转 类型(变量)
+}
+
+void func(int &a) {
+    cout << "left value" << endl;
+}
+
+void func(int &&a) {
+    cout << "right value" << endl;
+}
+
+int main() {
+    int a = 123, b = 456;
+    cout << a << " " << b << endl;
+    my_swap(a, b);
+    cout << a << " " << b << endl;
+    my_swap(my_move(a), my_move(b));
+    cout << a << " " << b << endl;
+    func(a);
+    func(my_move(a));
+    return 0;
+}
+```
+
+
+
+## 完整代码
+
+```c++
+#include <iostream>
+using namespace std;
+
+namespace haizei {
+
+class A {
+public:
+    A(int x) :x(x) {}
+    int x;
+};
+
+class B {
+public:
+    B(int y) : y(y) {}
+    int y;
+};
+
+int operator+(const A &a, const B &b) {
+    return a.x + b.y;
+}
+
+template<typename T, typename U> //typename, class　作用上没有任何区别
+auto add(T a, U b) -> decltype(a + b) { //decltype() 用来推导表达式返回值的类型，返回值后置
+    return a + b;
+}
+
+template<> //函数模板的特化形式
+int add(int a, int b) {
+    cout << "add int : " << a << " " << b << endl;
+    return a + b;
+}
+
+template<typename T, typename U> //模板的片特化
+auto add(T *a, U *b) -> decltype(*a + *b) {
+    return add(*a, *b); //二维地址也行，递归调用两次add(*a, *b)
+}
+
+template<typename T, typename U>
+auto max(T a, U b) -> decltype(a > b ? a : b) { //不能重载三目运算符 decltype(a + b)
+    return a > b ? a : b;
+}
+template<typename T, typename U>
+auto min(T a, U b) -> decltype(a > b ? b : a) {
+    return a > b ? b : a; //工具类设计思想，尽量使用同一个符号，可以让自定义类型少重载符号。
+}
+
+class PrintAny { //一个拥有模板方法的类
+public:
+    template<typename T>
+        void operator()(const T &a) {
+            cout << a << endl;
+        }
+};
+
+template<typename T>
+class FoolPrintAny {
+public: 
+    void operator()(const T &a) {
+        cout << a << endl;
+    }
+};
+
+template<>
+class FoolPrintAny<int> {
+public:
+    void operator()(const int &a) {
+        cout << "naughty : " << 2 * a << endl;
+    }
+};
+
+
+template<typename  T> //使用特化模板，解决递归一直展开的问题
+void printAny(const T &a) {
+    cout << a << endl;
+    return ;
+}
+
+template<typename T, typename ...ARGS> //变参模板
+void printAny(const T &a, ARGS... args) {
+    cout << a << " ";
+    printAny(args...);
+    return ;
+}
+
+
+
+//帮助模板类展开的模板类
+template<int n, typename T, typename ...ARGS> //为什么传入 int n编译期常量? 因为模板在编译后就不存在了
+struct ARG {
+    typedef typename ARG<n - 1, ARGS...>::__type __type;
+    //typedef ARG<n - 1, ARGS...> __rest;
+};
+
+template<typename T, typename ...ARGS>
+struct ARG<0, T, ARGS...> {
+   typedef T __type; 
+};
+
+template<typename T>
+struct ARG<0, T> {
+    typedef T __type;
+};
+
+
+template<typename T, typename ...ARGS> class Test; //工具模板类，去解析变参列表
+template<typename T, typename ...ARGS>
+class Test<T(ARGS...)> { //使用偏特化形式，让这个模板类使用更像一个函数
+public:
+    T operator()(ARGS... args) { //函数的入口写起
+        return add<T>(args...);   
+    }
+        //typename ARG<0, ARGS...>::__type a, //前面的typename主要是用来说明 后的的内容是一个类型（模板中的内置类型），避免语义歧义。
+private:
+    template<typename T1, typename U, typename ...US>
+        T1 add(U a, US ...args) {
+            return a + add<T1>(args...);
+        }
+    template<typename T1, typename U>
+        T1 add(U a) {
+            return a;
+        }
+};
+
+//模板函数作为参数，传递给函数的间接类型推导
+template<typename T, typename U>
+T test_param_func(U a) {
+    return a * 2;
+}
+
+void func2(int (*func)(double)) {
+    cout << func(2.3) << endl;
+}
+
+
+//remove——reference
+template<typename T> struct remove_reference { typedef T type; }; //正常值版本
+
+template<typename T> struct remove_reference<T &> { //左值引用偏特化版本
+    typedef T type;
+};
+
+template<typename T> struct remove_reference<T &&> { //右值引用偏特化版本
+    typedef T type;
+};
+
+//模板中的引用折叠
+template<typename T>
+typename remove_reference<T>::type add2(T &&a, T&&b) {
+    typename remove_reference<T>::type c = a + b; //不使用remove会造成把右值赋值给左值引用
+    return c;
+}
+
+//add_const
+template<typename T> struct add_const { typedef const T type; };
+template<typename T> struct add_const<const T> { typedef const T type; }; //T匹配到int
+
+
+//add_lvalue_reference
+template<typename T> struct add_lvalue_reference { typedef T& type; };
+template<typename T> struct add_lvalue_reference <T &>{ typedef T& type; };
+template<typename T> struct add_lvalue_reference<T &&> { typedef T& type; };
+
+//add_rvalue_reference
+template<typename T> struct add_rvalue_reference { typedef T&& type; };
+template<typename T> struct add_rvalue_reference<T &> { typedef T&& type; };
+template<typename T> struct add_rvalue_reference<T &&> { typedef T&& type; };
+
+//remove_pointer
+template<typename T> struct remove_pointer { typedef T type; };
+template<typename T> struct remove_pointer<T *> { typedef typename remove_pointer<T>::type type; };
+
+
+//move
+template<typename T>
+typename add_rvalue_reference<T>::type move(T &&a) { //&& 接收引用，左值变量会被推导为左值引用类型，右值会被推导为普通类型
+    return typename add_rvalue_reference<T>::type(a); //C++ 中的强转 类型(变量)
+}
+
+void f(int &x) {
+    cout << "f function : left value" << endl;
+    return ;
+}
+void f(int &&x) {
+    cout << "f function : right value" << endl;
+    return ;
+}
+
+} // end of haizei
+
+int main() {
+    int inta = 123, intb = 456;
+    cout << haizei::add2(inta, intb) << endl;
+    cout << haizei::add2(123, 456) << endl;
+    haizei::func2(haizei::test_param_func); //
+    haizei::A a(1000);
+    haizei::B b(645);
+    cout << a + b << endl;
+    cout << haizei::add(2, 3) << endl; //隐式的推导, 单一模板我们在使用的时候不光要知道声明，还要需要知道模板的定义（模板的定义实现在头文件中），根据模板定义在编译时生成具体逻辑函数
+    cout << haizei::add(2.3, 4.5) << endl;
+    //cout << add<double>(2.3, 3) << endl; //<>显示的实例化，调用的Ｔ为ｄｏｕｂｌｅ类型
+    cout << haizei::add(2.3, 3.6) << endl;
+    cout << haizei::add(string("hello"), "hello world") << endl;
+    cout << haizei::add(a, b) << endl;
+    cout << max(4, 3) << endl;
+    cout << haizei::max(4.3, 3) << endl;
+    cout << haizei::min(4.3, 3) << endl;
+    haizei::PrintAny print; //有一个PrintAny的类
+    print(123); //模板的实例化会生成具体的函数或类，模板的参数就是哪些未确定的类型，operator()(int); 当我们使用模板方法的时候，模板方法再进行实例化（把各个参数固定）
+    print(34543);
+    print(3.4);
+    print("hello world");
+    print("hello haizei");
+    print(&a);
+    haizei::FoolPrintAny<string> f;
+    f(string("hello world"));
+    haizei::FoolPrintAny<int> f2;
+    f2(123);
+    int n = 45, m = 67;
+    int *p = &n, *q = &m;
+    cout << haizei::add(n, m) << endl;
+    cout << haizei::add(p, q) << endl;
+    haizei::printAny(123, 34.5, "hello world", &a);
+    haizei::Test<int(int, int)> f3; //函数对象
+    cout << f3(3, 4) << endl;
+    
+    haizei::Test<int(int, int, int, int)> f4;
+    cout << f4(1, 2, 3, 4) << endl;
+    haizei::Test<int(int, int, int, int, int)> f5;
+    cout << f5(1, 2, 3, 4, 5) << endl;
+    
+    haizei::f(n);
+    haizei::f(haizei::move(m));
+    return 0;
+}
+```
+
+
+
+## function模板
+
+> function定义于头文件functional中。通过function<int(int, int)> 声明一个function类型，它是“接受两个int参数、返回一个int类型”的可调用对象，这里可调用对象可以理解为函数指针（指针指向一个函数，该函数有两个int类型参数，返回int类型，即：int (*p)(int, int) ）。
+
+> 可调用对象：对于一个对象或表达式，如果可以对其使用调用运算符，则称该对象或表达式为可调用对象。
+
+> 因为function 是一种模板，所以要传入类型，就如vector<int> 传入类型int一样
+>
+> 不过,function传入的是函数类型 返回值 （参数类型） 如：std::function<void (int)>示例
+
+```c++
+普通函数
+void gFunc(){
+	 cout << "gFunc" << endl;
+ }
+ int main(){
+   		function<void()> f = gFunc;
+     function<void()> f (gFunc);
+		f();  
+		return 0;
+} 
+```
+
+
+
+```c++
+示例2 模板函数
+template <class T>
+T g_Add(T i, T j){
+	cout << i + j;
+	return i + j;
+}
+int main(){
+	function<int(int,int)> f = g_Add<int>;
+	f(2,3);
+	return 0;
+}
+```
+
+```c++
+
+/函数对象
+struct Add{
+	int operator()(int i, int j){
+		return i + j;
+	}
+};
+//模板函数对象
+template <class T>
+struct AddT{
+	T operator()(T i, T j){
+		return i + j;
+	}
+};
+ 
+int main(){
+	function<int(int, int)> f = Add();
+	cout<<f(2,3)<<endl;
+	function<int(int, int)> ft = AddT<int>();
+	cout << ft(5, 6)<<endl;
+	getchar();
+	return 0;
+}
+```
+
+```c++
+类成员函数
+class Computer{
+public:
+	static int Add(int i, int j){
+		return i + j;
+	}
+ 
+	template<class T>
+	static T AddT(T i, T j){
+		return i + j;
+	}
+	int AddN(int i, int j){
+		return i + j;
+	}
+};
+ 
+//存储对成员函数的调用 
+int main(){
+	//1、 类静态函数
+	function<int(int, int)> f = &Computer::Add;
+	cout << f(1, 1) << endl;
+ 
+	//2、 类静态模板函数
+	function<int(int, int)> ft = &Computer::AddT<int>;
+	cout << ft(1, 1) << endl;
+ 
+	//普通函数绑定  需要构造类对象
+	Computer c;
+	//3、 普通函数 需使用bind,将类对象地址 &c 绑定上
+	function<int(int, int)> fN = bind(&Computer::AddN, &c, placeholders::_1, placeholders::_2);
+	cout << fN(1, 1) << endl;
+ 
+	//4、普通函数， 也可以这样调用  个人觉得这个比 bind 麻烦，不建议
+	function <int(const Computer ＆, int, int)> fN2 = &Computer::AddN;
+	cout << fN2(c,1, 1) << endl;
+	return 0;
+}
+```
+
+### function实现 使用
+
+> 具体代码见 Git/C++/30.function.cpp
+
+```c++
+template<typename RT, typename ...ARGS> class FunctionCnt;
+template<typename RT, typename ...ARGS>
+class FunctionCnt<RT(ARGS...)>{
+public:
+    FunctionCnt(haizei::function<RT(ARGS...)> __g) : g(__g), __cnt(0){}  //__g是海贼中声明function类型的变量， 要转换成std中function，要先转换为海贼中声明function类型。进行浅拷贝，然后析构空间。再转化为std中function会非法访问已经销毁的空间。解决方法是深拷贝。下面：
+    RT operator()(ARGS ...args) {
+        __cnt ++;
+        return g(args...);
+    }
+    int cnt(){return __cnt;}
+private:
+    haizei::function<RT(ARGS...)>g;
+    int __cnt;
+};
+```
+
+```c++
+// 深拷贝
+ function(const function &f) {
+        this->ptr = f.ptr->getCopy(); //getCopy()获取类型，通过子类中每次产生类型， 然后重写父类中getCopy方法，返回类型。下面：
+    }
+    function(function &&f) {
+        this->ptr = f.ptr;
+        f.ptr = nullptr;
+    }
+```
+
+```c++
+namespace haizei {
+template<typename RT, typename ...PARAMS> 
+class base {
+public :
+    virtual RT operator()(PARAMS...) = 0;
+    virtual base<RT, PARAMS...>* getCopy() = 0; //getCopy()获取类型, 纯虚函数
+    virtual ~base() {}
+};
+template<typename RT, typename ...PARAMS> 
+class normal_func : public base<RT, PARAMS...> {
+public :
+    typedef RT (*func_type)(PARAMS...);
+    normal_func(func_type func) : ptr(func) {}
+    virtual RT operator()(PARAMS...args) override {
+        return this->ptr(args...);
+    }
+    virtual base<RT, PARAMS...> *getCopy()override{ //重写父类中getCopy方法，返回类型。
+        return new normal_func<RT, PARAMS...>(ptr);
+    }
+private:
+    func_type ptr;
+};
+```
+
+
+
+
+
+## bind模板
+
+> bind函数定义在头文件 functional 中。可以将bind函数看作是一个通用的函数适配器，它接受一个可调用对象，生成一个新的可调用对象来“适应”原对象的参数列表。
+>
+> ref来进行引用传递，否则就是浅拷贝。
+
+```c++
+bind函数：接收一个函数名作为参数，生成一个新的函数。
+auto newCallable = bind(callbale, arg_list);
+
+bind的返回值是可调用实体，可以直接赋给function对象
+function< int(int)> bf3 = bind(&A::Func, a, placeholders::_1, 100);
+```
+
+
+
+```c++
+// 绑定普通函数
+#include<iostream>
+#include<functional>
+using namespace std;
+int plus(int a,int b){
+   return a+b;
+}
+int add_cnt(function<int(int, int)> func, int &n, int a, int b){
+     n += 1;
+    return func(a, b);
+}
+
+int main(){
+  //表示绑定函数plus 参数分别由调用 func1 的第一，二个参数指定
+   function<int<int,int>> func1 = bind(plus, placeholders::_1, placeholders::_2);
+    
+     function<int<int,int>> func1 = bind(plus, placeholders::_2, placeholders::_1);
+    //_2对应a但是第一个参数， _1对应b 第二个参数。
+  //func2的类型为 function<void(int, int, int)> 与func1类型一样
+   auto  func2 = bind(plus,1,2);   //表示绑定函数 plus 的第一，二为： 1， 2 
+   cout<<func1(1,2)<<endl; //3
+   cout<<func2()<<endl; //3
+	int n = 0; 
+    function<int(int, int)> f5 = bind(add_cnt,  plus , ref(n), placeholders::_1, placeholders::_2);
+    f5(99, 88);    f5(92, 80);   f5(95, 78);
+    cout << n << endl;
+    return 0;
+   retunrn 0;
+}
+```
+
+```c++
+//绑定类的成员函数
+#include<iostream>
+#include<functional>
+using namespace std;
+class Plus{
+   public:
+   	int plus(int a,int b){
+   	    return a+b;
+   	}
+}
+int main(){
+   Plus p;
+   // 指针形式调用成员函数
+   function<int<int,int>> func1 = std::bind(&Plus::plus,&p, placeholders::_1, placeholders::_2);
+  // 对象形式调用成员函数
+   function<int<int,int>> func2 = std::bind(&Plus::plus,p, placeholders::_1, placeholders::_2);
+   cout<<func1(1,2)<<endl; //3
+   cout<<func2(1,2)<<endl; //3
+   retunrn 0;
+}
+//占位符_1位于placeholders的命名空间，而placeholders位于std的命名空间中
+```
+
+```c++
+ 绑定类静态成员函数
+#include<iostream>
+#include<functional>
+using namespace std;
+class Plus{
+	public:
+		static int plus(int a,int b)
+		{
+		    return a+b;
+		}
+}
+int main(){
+   function<int<int,int>> func1 = std::bind(&Plus::plus, placeholders::_1, placeholders::_2);
+   cout<<func1(1,2)<<endl; //3
+   retunrn 0;
+}
+```
+
+
+
+## 模板的图灵
+
+> 新关键字constexpr进行编译期计算
+>
+> C++的模板是图灵完全的一种独立于C++的语言。理论上来说，我们可以利用它在编译期完成所有计算
+
+```c++
+//普通的模板图灵的使用
+template<int n, int m>
+struct Add{
+    static constexpr int r = n + m; //constexpr关键字
+};
+```
+
+```c++
+//Sum 普通递归的模板图灵的使用
+template<int n>
+struct Sum{
+    static constexpr int r = n + Sum<n - 1>::r; //递归调用
+};
+template<> //偏特化， 递归的临界条件
+struct Sum<0>{
+    static constexpr int r = 0;
+};
+```
+
+```c++
+//模板图灵实现求一个数是否是质数。
+template<int i, int n>
+struct getNextN{  //判断是否出界。 出届代表n 是质数。返回 n = 0；
+    static constexpr int r = (i * i > n ? 0 : n);
+};
+template<int i, int n> //判断是否整除， 整除代表n不是质数。 ℹ = 0；
+struct getNextI{
+    static constexpr int r = (n % i == 0 ? 0 : i + 1);
+};
+template<int i, int n> //Test模板 i 是从2 到 sqrt(n);
+struct Test{
+    static constexpr int r = Test<getNextI<i, n>::r, getNextN<i, n>::r>::r;
+    //getNextI<i, n>::r 代表 i； getNextN<i, n>::r代表n;
+};
+template<int n> //偏特化 变换后 i = 0，n不是质数的情况。
+struct Test<0, n>{  
+    static constexpr int r = 0; // r = 0;
+};
+template<int i>  //偏特化 变换后 n = 0，n是质数的情况。
+struct Test<i, 0>{
+    static constexpr int r = 1; // r = 1 ;
+};
+template<int i> //偏特化 初始值 n = 2，n是质数的情况。
+struct Test<i, 2>{
+    static constexpr int r = 1; // r = 1;
+};
+template<int n> //模板的入口。
+struct IsPrime{
+    static constexpr int r = Test<2, n>::r;  //使用Test实现。
+};
+```
+

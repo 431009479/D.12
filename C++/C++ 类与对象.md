@@ -193,7 +193,7 @@ public:
 };
 int main(){
   	People a = string("xiong");
-    a = 111;
+    a = 111;  //这个111会先调用 复制构造函数生成一个 People的对象。 再调用赋值构造函数。
     People c(123);
     c = a;
     cout << e.name << " " << e.x << endl;
@@ -284,17 +284,13 @@ int main(void){
 
 > const修饰变量一般有两种方式：const T *a，或者 T const *a，这两者都是一样的.
 
-> 类的成员函数后面加 const，表明这个函数不会对这个类对象的数据成员（准确地说是非静态数据成员）作任何改变。
-
-> 在设计类的时候，一个原则就是对于不改变数据成员的成员函数都要在后面加 const，而对于改变数据成员的成员函数不能加 const。所以 const 关键字对成员函数的行为作了更加明确的限定：
+> 类的成员函数后面加 const，表明这个函数不会对这个类对象的数据成员作任何改变。
 
 > （1）有 const 修饰的成员函数（指 const 放在函数参数表的后面，而不是在函数前面或者参数表内），只能读取数据成员，不能改变数据成员；没有 const 修饰的成员函数，对数据成员则是可读可写的。
-> （2）除此之外，在类的成员函数后面加 const 还有什么好处呢？那就是常量（即 const）对象可以调用 const 成员函数，而不能调用非const修饰的函数。
+> （2）在C++中只有被声明为const的成员函数才能被一个const类对象调用。
 
 ```c++
-在C++中只有被声明为const的成员函数才能被一个const类对象调用。
-
-若将成员函数声明为const，则不允许通过其修改类的数据成员。 值得注意的是，如果类中存在指针类型的数据成员即便是const函数只能保证不修改该指针的值，并不能保证不修改指针指向的对象
+若将成员函数声明为const，则不允许通过其修改类的数据成员。 如果类中存在指针类型的数据成员即便是const函数只能保证不修改该指针的值，并不能保证不修改指针指向的对象
  const成员函数的写法有两种
 　　1、void fun(int a，int b) const{}
 　　2、void const fun(int a,int b){}
@@ -307,10 +303,8 @@ int main(void){
 class Point {
 public :
     Point() {}
-	Point(int x, int y) : Point() {
+	Point(int _x, int _y) : x(_x) , y(_y) { //const 修饰的成员属性 只能用初始化列表赋值。
         cout << "param constructor : " << this << endl;
-        this->x = x;
-        this->y = y;
     }
 
     void set(int x, int y){
@@ -325,20 +319,60 @@ public :
     int S() const{return get_cnt;}
     
 private:
-    int x, y;
-    mutable int get_cnt = 0;
+    const int x, y;
+    mutable int get_cnt = 0; //允许被const成员函数修改
 };
 
 int main() {
-    Point a();
- 	a(3, 4);
+    Point a(3, 4);
     const Point e(6, 7);
-    e.get();
     e.get();
     e.get();
     e.get();
     cout << e.S() << endl;
     return 0;
 }
+```
+
+## C++ -- 深浅拷贝
+
+### 浅拷贝
+
+对于String类的拷贝构造函数及operator=函数来说，当用一个String对象拷贝构造或赋值给另一个String对象时，就是将这个对象里的指针的值赋值给另一个对象里的指针。**将一个指针值赋值给另一个指针，就会使得两个指针指向同一块空间**，这就产生了浅拷贝。
+
+```c++
+ String(const String& s) : _str(s._str) {} //拷贝构造函数
+
+      String& operator=(const String& s){
+           if (this != &s){
+                 _str = s._str;
+           }
+           return *this;
+      }
+```
+
+> 两个（或两个以上）指针指向同一块空间，这个内存就会被释放多次.
+>
+> 另一方面，当两个指针指向同一块空间时，一旦一个指针修改了这块空间的值，另一个指针指向的空间的值也会被修改。
+
+### 深拷贝
+
+深拷贝不同于浅拷贝的是，拷贝的时候回开辟出一块空间，将被拷贝的数据，拷贝到开辟的空间。两个指针指向的是不同的空间，空间里面的数据是相同的。所以在调用析构函数，释放空间的时候，就不会出现同时释放同一块空间两次的情况，程序就不会奔溃。
+
+```c++
+     String(const String& s) {
+           _str = new char[strlen(s._str) + 1];  //开空间
+           strcpy(_str, s._str);   //拷数据
+      }
+
+      String& operator=(const String& s){   //必须要返回引用，为了连续的赋值
+           if (this != &s){
+                 delete[] _str;
+                 _str = NULL;
+                 _str = new char[strlen(s._str) + 1];
+                 strcpy(_str, s._str);
+           }
+           return *this;
+      }
 ```
 

@@ -84,7 +84,7 @@ constexpr int k=f(); //只有f()是一个constexpr函数时k才是一个常量�
 //必须明确一点，在constexpr声明中，如果定义了一个指针，限定符号constexpr仅仅对指针有效，与指针所指对象无关。
     
 const int *p=nullptr;  //p是一个指向整型常量的指针（pointer to const）
-constexpr int *q=nullptr; //p1是一个常量指针(const pointer)
+constexpr int *q=nullptr; //q是一个常量指针(const pointer)
 p和q的类型相差甚远，p是一个指向常量的指针，q是一个常量指针，其中关键在于constexpr把它所定义的对象置为顶层const。
 ```
 
@@ -109,6 +109,7 @@ int main(){
     constexpr int d = f(12);
     cout << f(5) << endl;
     constexpr A k(2, 3);
+    A g(3, 9); //也可以当成普通的有参构造函数
     cout << k.x << "," << k.y << endl;
     return 0;
 }
@@ -149,7 +150,8 @@ public:
 //NULL在C中的定义
 //在C中，习惯将NULL定义为void*指针值0：
 #define NULL (void*)0  
-//在C++中，NULL却被明确定义为整常数0：
+//在C++中，NULL被定义为整常数0，或空地址：
+//在C++中，nullptr是空地址
 #ifndef NULL  
 #ifdef __cplusplus  
 #define NULL    0  
@@ -157,6 +159,117 @@ public:
 #define NULL    ((void *)0)  
 #endif  
 #endif  
+```
+
+## lambda表达式
+
+>lambda表达式 就是一个函数（匿名函数），也就是没有函数名的函数。
+>lambda表达式也叫闭包，闭就是封闭的意思，就是其他地方都不用他，包就是函数。
+>lambda表达式 其实就是一个函数对象，他内部创建了一个重载()操作符的类。
+
+```c++
+Lambda 表达式的定义形式如下：
+[外部变量访问方式说明符] (参数表) -> 返回值类型{
+   语句块
+};
+//[]代表lambda表达式的开始，{}代表函数体，什么都没有，()代表调用参数
+```
+
+>外部变量访问方式说明符
+>
+>[] 不捕获任何变量
+>[&] 以引用方式捕获所有变量
+>[=] 用值的方式捕获所有变量（可能被编译器优化为const &)
+>[=, &foo] 以引用捕获foo, 但其余变量都靠值捕获
+>[&, foo] 以值捕获foo, 但其余变量都靠引用捕获
+>[bar] 以值方式捕获bar; 不捕获其它变量
+>[this] 捕获所在类的this指针
+
+> [] (int x, int y) { return x + y; } // 隐式返回类型 
+>
+> [] (int& x) { ++x;  } // 没有 return 语句 -> Lambda 函数的返回类型是 'void' 
+>
+> [] () { ++global_x;  } // 没有参数，仅访问某个全局变量
+>
+> [] (int x, int y) -> int { int z = x + y; return z; } //指定返回类型
+
+ 
+
+```c++
+auto add = [](int a, int b) -> long long {  //auto自动推导  ， ->long long指定返回类型
+    return a + b;
+};
+
+auto Data = [](int a, int b) {  //auto推导Data是lambda表达式类的对象
+    return [=](auto func) { //func参数可以是lambda表达式。
+        return func(a, b);
+    };
+};
+
+auto First = [](int a, int b) {
+    return a;
+};
+
+auto Second = [](int a, int b) {
+    return b;
+};
+
+auto Add = [](int a, int b) {
+    return a + b;
+};
+
+auto Max = [](int a, int b) {
+    return max(a, b);
+};
+
+auto is_in = [](int a, int b) {
+    return [=](int x) {
+        return a <= x && x <= b;
+    };
+};
+
+auto OR = [](auto u, auto v) {
+    return [=](int x) {
+        return u(x) || v(x);
+    };
+};
+
+auto NOT = [](auto u) {
+    return [=](int x) {
+        return !u(x);
+    };
+};
+
+auto is_little = is_in('a', 'z');
+auto is_upper = is_in('A', 'Z');
+auto is_digit = is_in('0', '9');
+auto is_alpha = OR(is_little, is_upper);
+auto other = NOT(is_alpha);
+
+function<int()> Temp_Func() {
+    int a = 23;
+    return [=]() -> int {
+        return a;
+    };
+}
+
+int main() {
+    cout << is_little('A') << endl;
+    cout << is_little('a') << endl;
+    cout << is_alpha('a') << endl;
+    cout << is_alpha('A') << endl;
+    cout << other('A') << endl;
+    cout << other('9') << endl;
+    cout << add(2, 4) << endl;
+    auto func = Temp_Func();
+    cout << func() << endl;
+    auto a = Data(rand() % 1000, rand() % 1000); //a是对象
+    cout << a(First) << endl;
+    cout << a(Second) << endl;
+    cout << a(Add) << endl;
+    cout << a(Max) << endl;
+    return 0;
+}
 ```
 
 
@@ -234,7 +347,9 @@ type-id & cast-expression
 type-id && cast-expression  
 ```
 
-
+> 左值不能用右值引用  ： 右值是要销毁的值。
+>
+> 右值能用左值引用 ：要加const
 
 
 
